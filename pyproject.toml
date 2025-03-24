@@ -16,7 +16,8 @@ dependencies = [
     "pytest-django (>=4.10.0,<5.0.0)",
     "faker (>=36.1.1,<37.0.0)",
     "django-extensions (>=3.2.3,<4.0.0)",
-    "django-debug-toolbar (>=5.0.1,<6.0.0)"
+    "django-debug-toolbar (>=5.0.1,<6.0.0)",
+    "gitpython (>=3.1.44,<4.0.0)"
 ]
 
 
