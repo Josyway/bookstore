@@ -1,53 +1,86 @@
-name: Python application
+[tool.poetry]
+name = "project"
+version = "0.0.0"
+description = "description"
+authors = ["Author <author@project.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [
+    {include = "*", from = "src"}
+]
 
-on: [push]
+[tool.poetry.dependencies]
+python = "^3.12.1"
+dapr = "^1.12.1"
+dotmap = "^1.3.30"
+orjson = "^3.9.15"
+aiodns = "^3.1.1"
+fastapi = "^0.110.0"
+uvicorn = "^0.27.1"
+pydantic = "^2.6.2"
+pydantic-settings = "^2.2.1"
+piccolo = {extras = ["all"], version = "^1.3.1"}
+aiohttp = {extras = ["speedups"], version = "^3.9.3"}
+uvloop = {version = "^0.19.0", platform = "linux"}
+dapr-ext-fastapi = "^1.12.0"
+piccolo-admin = "^1.2.2"
 
-jobs:
-  build:
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: [3.12]
+[tool.poetry.group.dev]
+optional = true
 
-    runs-on: ubuntu-latest
+[tool.poetry.group.dev.dependencies]
+httpx = "^0.27.0"
+pytest = "^8.0.2"
+pytest-cov = "^4.1.0"
+pytest-asyncio = "^0.23.5"
+devtools-cli = "^0.13.1"
+coverage = "^7.4.3"
+aerich = "^0.7.2"
+pyarrow = "^15.0.0"
+pandas = {extras = ["excel"], version = "^2.2.1"}
 
-    services:
-      # Adding a PostgreSQL service
-      db:
-        image: postgres:13
-        ports:
-          - 5434:5432
-        env:
-          POSTGRES_USER: bookstore_dev
-          POSTGRES_PASSWORD: bookstore_dev
-          POSTGRES_DB: bookstore_dev_db
+# added by poetry source add command
+# [[tool.poetry.source]]
+# name = "privsrc"
+# url = "https://********.com/repository/pypi.org/simple"
+# priority = "primary"
 
-    steps:
-      - uses: actions/checkout@v2
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+console_output_style = "count"
+filterwarnings = ["ignore::DeprecationWarning"]
+testpaths = ["tests"]
+addopts = [
+    "--cov=src",
+    "--cov-report=html",
+    "--no-cov-on-fail",
+    "--import-mode=append"
+]
+pythonpath = [
+    ".",
+    "./src"
+]
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
+[tool.coverage.run]
+branch = true
+source = ["src/*"]
 
-      - name: Install Docker Compose
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
+[tool.coverage.report]
+skip_empty = true
+ignore_errors = true
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "@abstractmethod"
+]
 
-      - name: Install poetry
-        run: |
-          python -m ensurepip
-          python -m pip install --upgrade pip
-          python -m pip install --upgrade poetry
+[tool.coverage.html]
+directory = ".htmlcov"
 
-      - name: Install dependencies
-        shell: bash
-        run: poetry install
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
-      # Start Docker Compose and run tests within the container
-      - name: Start Docker Compose services
-        run: docker-compose -f docker-compose.test.yml up -d --build
-
-      - name: Run Tests
-        run: docker-compose exec -T web python manage.py test
