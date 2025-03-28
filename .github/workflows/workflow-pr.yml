@@ -1,16 +1,25 @@
 name: Python Pull Request Workflow
-on: [pull_request]
-jobs:
 
+on:
+  [pull_request]
+
+jobs:
   qa:
     name: Quality check
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - name: Set up Python
-        uses: actions/setup-python@master
+      - uses: actions/checkout@v2
+      
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: 3.12
+      
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+      
       - name: Install poetry
         run: |
           pip install -U pip
@@ -18,18 +27,22 @@ jobs:
           poetry install
         env:
           POETRY_VIRTUALENVS_CREATE: false
-
+      
       - name: View poetry --help
         run: poetry --help
-
+      
       - name: Install dependencies
         shell: bash
         run: python -m poetry install
-
-      - name: Test
-        run: |
-          poetry run python manage.py test
-      - name: Wemake Python Stylguide
+      
+      # Nova etapa para iniciar os containers
+      - name: Start Docker Compose services
+        run: docker-compose -f docker-compose.test.yml up -d --build
+      
+      - name: Run Tests
+        run: docker-compose exec -T web python manage.py test
+      
+      - name: Wemake Python Styleguide
         uses: wemake-services/wemake-python-styleguide@0.16.0
         continue-on-error: true
         with:
